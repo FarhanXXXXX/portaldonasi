@@ -79,7 +79,7 @@ const AboutPage: React.FC = () => {
           Mari bersama-sama membuat perubahan positif di dunia. Donasi sekarang dan jadilah bagian dari kebaikan.
         </p>
         <a
-          href="/donate"
+          href="/donationform"
           className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-300"
         >
           Donasi Sekarang

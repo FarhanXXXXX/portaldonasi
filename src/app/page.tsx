@@ -1,7 +1,26 @@
+// src/app/page.tsx
+'use client'
 import React from "react";
 import Image from "next/image";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from './lib/supabase';
 
 const Home: React.FC = () => {
+  const router = useRouter();
+
+  // Logika Otentikasi
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login'); // Redirect ke halaman login jika tidak ada sesi
+      }
+    };
+
+    checkSession();
+  }, [router]);
+
   // Dummy Data for Features
   const features = [
     {
@@ -46,8 +65,7 @@ const Home: React.FC = () => {
           width: "100%", // ✅ Sesuaikan dengan lebar layar
         }}
       >
-        <div className="absolute inset-0 bg-black opacity-50"></div>{" "}
-        {/* Overlay untuk kontras teks */}
+        <div className="absolute inset-0 bg-black opacity-50"></div> {/* Overlay untuk kontras teks */}
         <div className="h-screen container mx-auto px-20 -mt-[100px] relative z-10 flex flex-col md:flex-row items-center justify-between">
           {/* Text Content */}
           <div className="text-center md:text-left mb-8 md:mb-0">
@@ -59,7 +77,7 @@ const Home: React.FC = () => {
               yang mudah dan aman.
             </p>
             <a
-              href="/donasikan"
+              href="/donationform"
               className="bg-white text-blue-600 font-bold py-3 px-6 rounded-full hover:bg-blue-50 transition duration-300"
             >
               Donasikan Sekarang
@@ -130,9 +148,12 @@ const Home: React.FC = () => {
           <p className="text-lg mb-8">
             Bergabunglah dengan ribuan orang yang telah membantu sesama.
           </p>
-          <button className="bg-white text-blue-600 font-bold py-3 px-6 rounded-full hover:bg-blue-50 transition duration-300">
+          <a
+            href="/donationform"
+            className="bg-white text-blue-600 font-bold py-3 px-6 rounded-full hover:bg-blue-50 transition duration-300"
+          >
             Mulai Donasi Sekarang
-          </button>
+          </a>
         </div>
       </section>
     </div>

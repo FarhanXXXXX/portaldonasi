@@ -17,10 +17,10 @@ const Navbar: React.FC = () => {
           <Link href="/example">
             <span className="hover:text-gray-300 cursor-pointer">Dashboard</span>
           </Link>
-          <Link href="/donasikan">
+          <Link href="/donationform">
             <span className="hover:text-gray-300 cursor-pointer">Donasikan</span>
           </Link>
-          <Link href="/laporan-donasi">
+          <Link href="/report">
             <span className="hover:text-gray-300 cursor-pointer">Laporan Donasi</span>
           </Link>
           <Link href="/kami">
