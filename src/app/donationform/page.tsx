@@ -1,138 +1,137 @@
 'use client'
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
-interface DonationForm {
-  name: string;
-  email: string;
-  amount: number;
-  message?: string;
-}
-
-const DonationForm = () => {
-  const [formData, setFormData] = useState<DonationForm>({
-    name: '',
-    email: '',
-    amount: 50000,
-    message: '',
+const DonationForm: React.FC = () => {
+  const [formData, setFormData] = useState({
+    amount: '',
+    donorName: '',
+    donationDate: '',
   });
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
+    setLoading(true);
+
     try {
-      const response = await fetch('/api/donate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      
-      if (response.ok) {
-        setIsSuccess(true);
-        setFormData({
-          name: '',
-          email: '',
-          amount: 50000,
-          message: '',
-        });
-      }
-    } catch (error) {
-      console.error('Error submitting donation:', error);
+      const { error } = await supabase.from('donations').insert([
+        {
+          amount: parseFloat(formData.amount),
+          donor_name: formData.donorName,
+          donation_date: formData.donationDate,
+        },
+      ]);
+
+      if (error) throw error;
+
+      setMessage('Donasi berhasil disimpan!');
+      setFormData({ amount: '', donorName: '', donationDate: '' });
+    } catch (err: any) {
+      setMessage(`Error: ${err.message}`);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      {isSuccess ? (
-        <div className="text-center text-green-600 mb-6">
-          Terima kasih atas donasi Anda!
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="name">
-              Nama Lengkap
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="email">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+    <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg">
+      {/* Judul */}
+      <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Form Transaksi Donasi</h2>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Nominal Donasi</label>
-            <div className="grid grid-cols-3 gap-4 mb-2">
-              {[50000, 100000, 200000].map((amount) => (
-                <button
-                  key={amount}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, amount })}
-                  className={`px-4 py-2 rounded-lg focus:outline-none ${
-                    formData.amount === amount
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
-                >
-                  Rp{amount.toLocaleString()}
-                </button>
-              ))}
-            </div>
+      {/* Pesan Status */}
+      {message && (
+        <p
+          className={`text-center mb-4 ${
+            message.includes('berhasil') ? 'text-green-500' : 'text-red-500'
+          }`}
+        >
+          {message}
+        </p>
+      )}
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Input Jumlah Donasi */}
+        <div>
+          <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+            Jumlah Donasi
+          </label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+              Rp
+            </span>
             <input
               type="number"
-              min="10000"
+              id="amount"
+              name="amount"
               value={formData.amount}
-              onChange={(e) => setFormData({ 
-                ...formData, 
-                amount: parseInt(e.target.value) || 0 
-              })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={handleChange}
+              className="w-full px-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Masukkan jumlah donasi"
+              required
             />
           </div>
+        </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="message">
-              Pesan (opsional)
-            </label>
-            <textarea
-              id="message"
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        {/* Input Nama Donatur */}
+        <div>
+          <label htmlFor="donorName" className="block text-sm font-medium text-gray-700 mb-1">
+            Nama Donatur
+          </label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+              👤
+            </span>
+            <input
+              type="text"
+              id="donorName"
+              name="donorName"
+              value={formData.donorName}
+              onChange={handleChange}
+              className="w-full px-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Masukkan nama donatur"
+              required
             />
           </div>
+        </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400"
-          >
-            {isLoading ? 'Sedang memproses...' : 'Donasi Sekarang'}
-          </button>
-        </form>
-      )}
+        {/* Input Tanggal Donasi */}
+        <div>
+          <label htmlFor="donationDate" className="block text-sm font-medium text-gray-700 mb-1">
+            Tanggal Donasi
+          </label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+              📅
+            </span>
+            <input
+              type="date"
+              id="donationDate"
+              name="donationDate"
+              value={formData.donationDate}
+              onChange={handleChange}
+              className="w-full px-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Tombol Submit */}
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={loading}
+        >
+          {loading ? 'Menyimpan...' : 'Simpan'}
+        </button>
+      </form>
     </div>
   );
 };
