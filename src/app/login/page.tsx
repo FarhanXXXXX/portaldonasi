@@ -46,7 +46,7 @@ const LoginPage = () => {
             Welcome Back!
           </h2>
           <p className="text-center text-sm text-gray-600">
-            Enter your email to receive a magic link.
+            Send Email.
           </p>
 
           {/* Form */}
@@ -73,7 +73,7 @@ const LoginPage = () => {
               type="submit"
               className="w-full flex justify-center items-center rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 text-sm font-medium text-white hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300"
             >
-              Send Magic Link
+              Send Email
             </button>
           </form>
 

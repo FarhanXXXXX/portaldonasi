@@ -1,30 +1,86 @@
-'use client';
-import React from 'react';
+'use client'
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 import DonationChart from '@app/components/donationchart';
 
 const Dashboard: React.FC = () => {
-  const summaryData = [
-    { title: 'Total Donasi', value: 'Rp 50.000.000', icon: '💸' },
-    { title: 'Jumlah Donatur', value: '1.200', icon: '👥' },
-    { title: 'Proyek Aktif', value: '15', icon: '📊' },
-    { title: 'Donasi Hari Ini', value: 'Rp 2.500.000', icon: '📅' },
-  ];
+  // State untuk menyimpan data
+  const [summaryData, setSummaryData] = useState<any[]>([]);
+  const [tableData, setTableData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<number[]>([]);
+  const [chartLabels, setChartLabels] = useState<string[]>([]);
 
-  const tableData = [
-    { id: 1, nama: 'Donatur A', jumlah: 'Rp 1.000.000', tanggal: '2023-10-01' },
-    { id: 2, nama: 'Donatur B', jumlah: 'Rp 500.000', tanggal: '2023-10-02' },
-    { id: 3, nama: 'Donatur C', jumlah: 'Rp 750.000', tanggal: '2023-10-03' },
-  ];
+  // Fungsi untuk mengambil data dari database
+  const fetchData = async () => {
+    try {
+      // Ambil semua transaksi donasi
+      const { data: donations, error } = await supabase.from('donations').select('*');
+      if (error) throw error;
 
-  const chartData = [10000, 20000, 15000, 30000, 25000];
-  const chartLabels = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+      // Jika tidak ada data, kembalikan state kosong
+      if (!donations || donations.length === 0) {
+        return;
+      }
+
+      // Hitung total donasi
+      const totalDonation = donations.reduce((total, donation) => total + parseFloat(donation.amount), 0);
+
+      // Hitung jumlah donatur unik
+      const uniqueDonors = new Set(donations.map(donation => donation.donor_name));
+      const donorCount = uniqueDonors.size;
+
+      // Hitung donasi hari ini
+      const today = new Date();
+      const donationsToday = donations.filter(donation =>
+        new Date(donation.donation_date).toDateString() === today.toDateString()
+      );
+      const totalDonationToday = donationsToday.reduce((total, donation) => total + parseFloat(donation.amount), 0);
+
+      // Update summary data TANPA "Proyek Aktif"
+      setSummaryData([
+        { title: 'Total Donasi', value: `Rp ${totalDonation.toLocaleString()}`, icon: '💸' },
+        { title: 'Jumlah Donatur', value: donorCount.toString(), icon: '👥' },
+        { title: 'Donasi Hari Ini', value: `Rp ${totalDonationToday.toLocaleString()}`, icon: '📅' },
+      ]);
+
+      // Update table data
+      setTableData(
+        donations.map((donation, index) => ({
+          id: index + 1,
+          nama: donation.donor_name,
+          jumlah: `Rp ${donation.amount.toLocaleString()}`,
+          tanggal: new Date(donation.donation_date).toLocaleDateString('id-ID'),
+        }))
+      );
+
+      // Update chart data (contoh: grafik donasi harian)
+      const dailyDonations = donations.reduce((acc, donation) => {
+        const date = new Date(donation.donation_date).toLocaleDateString('id-ID');
+        acc[date] = (acc[date] || 0) + parseFloat(donation.amount);
+        return acc;
+      }, {} as Record<string, number>);
+
+      const labels = Object.keys(dailyDonations);
+      const values = Object.values(dailyDonations);
+
+      setChartLabels(labels);
+      setChartData(values);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  // Memuat data saat komponen dimuat
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {summaryData.map((item, index) => (
           <div
             key={index}
